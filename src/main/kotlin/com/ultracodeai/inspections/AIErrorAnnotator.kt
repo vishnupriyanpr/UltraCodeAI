@@ -60,7 +60,7 @@ class AIErrorAnnotator : Annotator {
         private const val MIN_ANALYSIS_LENGTH = 2
         private const val MAX_SINGLE_ANALYSIS_LENGTH = 50000 // Support very large files
         private const val CHUNK_ANALYSIS_SIZE = 5000 // For chunked analysis of large files
-        private const val AI_CONFIDENCE_THRESHOLD = 0.90 // Lower threshold for better coverage
+        private const val AI_CONFIDENCE_THRESHOLD = 0.98 // Lower threshold for better coverage
         private const val CACHE_TTL_MS = 600_000L // 10 minutes cache
         private const val MAX_CACHE_SIZE = 10000 // Large cache for performance
         private const val MAX_CONCURRENT_AI_REQUESTS = 3
@@ -86,66 +86,7 @@ class AIErrorAnnotator : Annotator {
         }
         // Add these helper methods to your AIErrorAnnotator class:
 
-    private fun extractKeywordFromPattern(patternName: String, context: String): String {
-        return when {
-            patternName.contains("IF") -> "if"
-            patternName.contains("ELIF") -> "elif"
-            patternName.contains("ELSE") -> "else"
-            patternName.contains("FOR") -> "for"
-            patternName.contains("WHILE") -> "while"
-            patternName.contains("DEF") -> "def"
-            patternName.contains("CLASS") -> "class"
-            patternName.contains("TRY") -> "try"
-            patternName.contains("EXCEPT") -> "except"
-            patternName.contains("FINALLY") -> "finally"
-            patternName.contains("WITH") -> "with"
-            patternName.contains("ASYNC") -> "async"
-            else -> {
-                // Fallback: extract from context
-                PYTHON_CONTROL_KEYWORDS.find { context.trim().startsWith("$it ") } ?: "statement"
-            }
-        }
-    }
-
-    private fun findStringStart(context: String): Int {
-        val singleQuote = context.indexOf('\'')
-        val doubleQuote = context.indexOf('"')
     
-        return when {
-            singleQuote >= 0 && doubleQuote >= 0 -> minOf(singleQuote, doubleQuote)
-            singleQuote >= 0 -> singleQuote
-            doubleQuote >= 0 -> doubleQuote
-            else -> 0
-        }
-    }
-
-    private fun findTripleQuoteStart(context: String): Int {
-        val tripleDouble = context.indexOf("\"\"\"")
-        val tripleSingle = context.indexOf("'''")
-    
-        return when {
-            tripleDouble >= 0 && tripleSingle >= 0 -> minOf(tripleDouble, tripleSingle)
-            tripleDouble >= 0 -> tripleDouble
-            tripleSingle >= 0 -> tripleSingle
-            else -> 0
-        }
-    }
-
-    private fun extractFunctionName(context: String): String {
-        val match = Regex("""def\s+(\w+)""").find(context)
-        return match?.groupValues?.getOrNull(1) ?: "function"
-    }
-
-    private fun extractClassName(context: String): String {
-        val match = Regex("""class\s+(\w+)""").find(context)
-        return match?.groupValues?.getOrNull(1) ?: "class"
-    }
-
-    private fun findLastOperator(context: String): Int {
-        val operators = "+-*/=<>!&|^~"
-        return context.indexOfLast { it in operators }.takeIf { it >= 0 } ?: 0
-    }
-
         
         private val AI_WARNING = TextAttributesKey.createTextAttributesKey(
             "ULTRACODEAI_WARNING", 
@@ -443,40 +384,105 @@ class AIErrorAnnotator : Annotator {
         }
     }
     
-    private fun shouldProcessElement(element: PsiElement): Boolean {
-        // Skip non-meaningful elements for performance
-        if (element is PsiWhiteSpace || element is PsiComment) return false
+    private fun hasUnmatchedDelimiters(text: String): Boolean {
+        val parenCount = text.count { it == '(' } - text.count { it == ')' }
+        val bracketCount = text.count { it == '[' } - text.count { it == ']' }
+        val braceCount = text.count { it == '{' } - text.count { it == '}' }
+        val singleQuoteCount = text.count { it == '\'' }
+        val doubleQuoteCount = text.count { it == '"' }
         
-        // Skip if error detection is disabled
+        return parenCount != 0 || bracketCount != 0 || braceCount != 0 ||
+            singleQuoteCount % 2 != 0 || doubleQuoteCount % 2 != 0
+    }
+
+
+    private fun shouldProcessElement(element: PsiElement): Boolean {
+        // Skip non-meaningful elements
+        if (element is PsiWhiteSpace || element is PsiComment) return false
         if (!settings.enableErrorDetection) return false
         
-        // Get element information
-        val elementType = element.node?.elementType?.toString() ?: ""
         val text = element.text.trim()
         
-        // CRITICAL: Skip obviously valid Python code first
-        if (isDefinitelyValidCode(text)) return false
+        // CRITICAL: Skip obviously valid Python code patterns
+        if (isObviouslyValidPythonCode(text)) return false
         
-        // Only process elements that are likely to have errors
+        // Only process elements with GENUINE syntax issues
         return when {
-            // Only flag incomplete control structures
-            text.matches(Regex("""^(if|elif|else|for|while|def|class|try|except|finally|with)\s+[^:]*[^:\s]$""")) -> true
+            // ONLY flag control structures missing colons (be very specific)
+            text.matches(Regex("""^(if|elif|else|for|while|def|class|try|except|finally|with)\s+[^:]*[^:\s]$""")) &&
+            !text.contains("=") && // Not an assignment
+            !text.endsWith("\\") && // Not line continuation
+            !text.contains("(") && // Not function call
+            text.length > 5 -> true // Must have substantial content
             
-            // Only flag obviously unmatched brackets
-            (text.contains("(") && !text.contains(")")) ||
-            (text.contains("[") && !text.contains("]")) ||
-            (text.contains("{") && !text.contains("}")) -> true
-            
-            // Only flag unclosed strings
-            (text.count { it == '"' } % 2 != 0) ||
-            (text.count { it == '\'' } % 2 != 0) -> true
-            
-            // Multi-line constructs that might have issues
-            text.lines().size > 1 && containsPythonConstructs(text) -> true
+            // ONLY flag major bracket imbalances (difference > 2)
+            hasMajorDelimiterIssues(text) -> true
             
             else -> false
         }
     }
+
+    private fun isObviouslyValidPythonCode(code: String): Boolean {
+        return when {
+            // Valid assignments (most common false positive)
+            code.matches(Regex("""^\s*[a-zA-Z_]\w*\s*=\s*[^=].*""")) -> true
+            
+            // Valid function calls
+            code.matches(Regex("""^\s*\w+\([^)]*\)\s*$""")) -> true
+            
+            // Valid control structures WITH colons
+            code.matches(Regex("""^(if|elif|else|for|while|def|class|try|except|finally|with)\s+.*:.*$""")) -> true
+            
+            // Valid complete statements
+            code.contains("print(") || code.contains("return ") || code.contains("pass") || 
+            code.contains("break") || code.contains("continue") -> true
+            
+            // Valid expressions and literals
+            code.matches(Regex("""^\s*[\d\w\[\]{}()'",.\s+=\-*/]+\s*$""")) && 
+            code.length < 100 && !code.contains("if ") && !code.contains("def ") -> true
+            
+            // Valid multi-line blocks
+            isValidMultiLineBlock(code) -> true
+            
+            // Valid imports
+            code.startsWith("import ") || code.startsWith("from ") -> true
+            
+            else -> false
+        }
+    }
+
+
+    private fun hasObviousMultiLineSyntaxIssues(code: String): Boolean {
+        val lines = code.lines()
+        
+        // Check for incomplete control structures (missing colons)
+        for (line in lines) {
+            val trimmed = line.trim()
+            if (trimmed.isEmpty() || trimmed.startsWith("#")) continue
+            
+            // Only flag if it's clearly an incomplete control structure
+            if (trimmed.matches(Regex("^(if|elif|else|for|while|def|class|try|except|finally|with)\\s+.*[^:]$")) &&
+                !trimmed.endsWith("\\") && // Not a line continuation
+                !trimmed.contains("=") // Not an assignment
+            ) {
+                return true
+            }
+        }
+        
+        // Check for major bracket imbalances
+        val openParens = code.count { it == '(' }
+        val closeParens = code.count { it == ')' }
+        val openBrackets = code.count { it == '[' }
+        val closeBrackets = code.count { it == ']' }
+        val openBraces = code.count { it == '{' }
+        val closeBraces = code.count { it == '}' }
+        
+        // Only flag major imbalances (difference > 1)
+        return (kotlin.math.abs(openParens - closeParens) > 1) ||
+            (kotlin.math.abs(openBrackets - closeBrackets) > 1) ||
+            (kotlin.math.abs(openBraces - closeBraces) > 1)
+    }
+
 
     
     private fun isValidForAnalysis(code: String): Boolean {
@@ -495,45 +501,79 @@ class AIErrorAnnotator : Annotator {
     }
     
     private fun isDefinitelyValidCode(code: String): Boolean {
-        return when {
-            // Python keywords and built-ins
-            PYTHON_BUILTIN_FUNCTIONS.contains(code) -> true
-            PYTHON_CONTROL_KEYWORDS.contains(code) -> true
+    return when {
+        // Python keywords and built-ins
+        PYTHON_BUILTIN_FUNCTIONS.contains(code) -> true
+        PYTHON_CONTROL_KEYWORDS.contains(code) -> true
+        
+        // Simple literals
+        code.matches(Regex("""^\d+$""")) -> true // Integer
+        code.matches(Regex("""^\d*\.\d+$""")) -> true // Float
+        code.matches(Regex("""^True|False|None$""")) -> true // Boolean/None
+        
+        // Simple strings
+        code.matches(Regex("""^["'][^"']*["']$""")) -> true
+        code.matches(Regex("""^["']{3}[^"']*["']{3}$""")) -> true
+        
+        // Valid assignment patterns - CRITICAL FIX
+        isObviouslyValidAssignment(code) -> true
+        
+        // Valid function calls
+        code.matches(Regex("""^\s*\w+\([^)]*\)\s*$""")) -> true
+        
+        // Valid control structures with colons
+        code.matches(Regex("""^(if|elif|else|for|while|def|class|try|except|finally|with)\s+.*:$""")) -> true
+        
+        // CRITICAL: Valid multi-line control blocks
+        isValidMultiLineBlock(code) -> true
+        
+        // Simple identifiers
+        code.matches(Regex("""^[a-zA-Z_]\w*$""")) && code.length <= 20 -> true
+        
+        // Simple operators
+        PYTHON_OPERATORS.contains(code) -> true
+        
+        // Comments
+        code.startsWith("#") -> true
+        
+        // List/dict literals
+        code.matches(Regex("""^\[.*\]$""")) -> true
+        code.matches(Regex("""^\{.*\}$""")) -> true
+        
+        else -> false
+    }
+}
+
+private fun isValidMultiLineBlock(code: String): Boolean {
+    val lines = code.lines().filter { it.trim().isNotEmpty() && !it.trim().startsWith("#") }
+    if (lines.size <= 1) return false
+    
+    // Check if this looks like a complete, valid Python block
+    val firstLine = lines.first().trim()
+    
+    // Valid multi-line control structures
+    if (firstLine.matches(Regex("^(if|elif|else|for|while|def|class|try|except|finally|with)\\s+.*:$"))) {
+        // Check if subsequent lines are properly indented
+        val firstIndent = lines.first().takeWhile { it == ' ' || it == '\t' }.length
+        
+        for (i in 1 until lines.size) {
+            val line = lines[i]
+            val lineIndent = line.takeWhile { it == ' ' || it == '\t' }.length
             
-            // Simple literals
-            code.matches(Regex("""^\d+$""")) -> true // Integer
-            code.matches(Regex("""^\d*\.\d+$""")) -> true // Float
-            code.matches(Regex("""^True|False|None$""")) -> true // Boolean/None
-            
-            // Simple strings
-            code.matches(Regex("""^["'][^"']*["']$""")) -> true
-            code.matches(Regex("""^["']{3}[^"']*["']{3}$""")) -> true
-            
-            // Valid assignment patterns - CRITICAL FIX
-            isObviouslyValidAssignment(code) -> true
-            
-            // Valid function calls
-            code.matches(Regex("""^\s*\w+\([^)]*\)\s*$""")) -> true
-            
-            // Valid control structures with colons
-            code.matches(Regex("""^(if|elif|else|for|while|def|class|try|except|finally|with)\s+.*:$""")) -> true
-            
-            // Simple identifiers
-            code.matches(Regex("""^[a-zA-Z_]\w*$""")) && code.length <= 20 -> true
-            
-            // Simple operators
-            PYTHON_OPERATORS.contains(code) -> true
-            
-            // Comments
-            code.startsWith("#") -> true
-            
-            // List/dict literals
-            code.matches(Regex("""^\[.*\]$""")) -> true
-            code.matches(Regex("""^\{.*\}$""")) -> true
-            
-            else -> false
+            // Body lines should be more indented than the control line
+            if (line.trim().isNotEmpty() && lineIndent > firstIndent) {
+                return true // Found properly indented body
+            }
         }
     }
+    
+    // Valid multi-line assignments or expressions
+    if (lines.any { it.contains("=") && !it.trim().startsWith("=") }) {
+        return true
+    }
+    
+    return false
+}
 
     private fun isObviouslyValidAssignment(code: String): Boolean {
         return code.matches(Regex("""^\s*[a-zA-Z_]\w*\s*=\s*[^=].*$""")) ||
@@ -1393,7 +1433,7 @@ class AIErrorAnnotator : Annotator {
                             severity = ErrorSeverity.ERROR,
                             message = "Missing colon ':' after '$keyword' statement",
                             line = lineIndex,
-                            column = line.indexOf(keyword),
+                            column = line.indexOf(keyword, 0),
                             length = keyword.length,
                             suggestion = "Add ':' at the end of the $keyword statement",
                             confidence = 0.95,
@@ -1437,7 +1477,7 @@ class AIErrorAnnotator : Annotator {
                                     severity = ErrorSeverity.ERROR,
                                     message = "$keyword statement missing condition",
                                     line = lineIndex,
-                                    column = line.indexOf(keyword) + keyword.length,
+                                    column = line.indexOf(keyword, 0) + keyword.length,
                                     length = 1,
                                     suggestion = "Add condition after '$keyword'",
                                     confidence = 0.95,
@@ -1453,7 +1493,7 @@ class AIErrorAnnotator : Annotator {
                                     severity = ErrorSeverity.ERROR,
                                     message = "for loop missing 'in' clause",
                                     line = lineIndex,
-                                    column = line.indexOf(keyword),
+                                    column = line.indexOf(keyword, 0),
                                     length = trimmed.length,
                                     suggestion = "Add 'in' clause: for item in iterable:",
                                     confidence = 0.9,
@@ -1490,51 +1530,6 @@ class AIErrorAnnotator : Annotator {
     // Continued in the next part due to length constraints...
     
     // Helper methods for pattern analysis
-    private fun extractKeywordFromPattern(patternName: String, context: String): String {
-        return when {
-            patternName.contains("IF") -> "if"
-            patternName.contains("ELIF") -> "elif" 
-            patternName.contains("ELSE") -> "else"
-            patternName.contains("FOR") -> "for"
-            patternName.contains("WHILE") -> "while"
-            patternName.contains("DEF") -> "def"
-            patternName.contains("CLASS") -> "class"
-            patternName.contains("TRY") -> "try"
-            patternName.contains("EXCEPT") -> "except"
-            patternName.contains("FINALLY") -> "finally"
-            patternName.contains("WITH") -> "with"
-            else -> PYTHON_CONTROL_KEYWORDS.find { context.contains(it) } ?: "statement"
-        }
-    }
-    
-    private fun findStringStart(context: String): Int {
-        return maxOf(context.indexOf('"'), context.indexOf('\''))
-    }
-    
-    private fun findTripleQuoteStart(context: String): Int {
-        val doubleTriple = context.indexOf("\"\"\"")
-        val singleTriple = context.indexOf("'''")
-        return when {
-            doubleTriple >= 0 && singleTriple >= 0 -> minOf(doubleTriple, singleTriple)
-            doubleTriple >= 0 -> doubleTriple
-            singleTriple >= 0 -> singleTriple
-            else -> 0
-        }
-    }
-    
-    private fun extractFunctionName(context: String): String {
-        val match = Regex("""def\s+(\w+)""").find(context)
-        return match?.groupValues?.get(1) ?: ""
-    }
-    
-    private fun extractClassName(context: String): String {
-        val match = Regex("""class\s+(\w+)""").find(context)
-        return match?.groupValues?.get(1) ?: ""
-    }
-    
-    private fun findLastOperator(context: String): Int {
-        return context.indexOfLast { it in "+-*/=<>!&|^~" }
-    }
     
     private fun extractParenthesesContent(line: String): String? {
         val start = line.indexOf('(')
@@ -1558,19 +1553,302 @@ class AIErrorAnnotator : Annotator {
     }
     
     // Continue with remaining methods...
+    
     private fun analyzeComplexMultiLineStructure(code: String): List<PythonSyntaxError> {
         val errors = mutableListOf<PythonSyntaxError>()
         val lines = code.lines()
         
-        // Analyze complex multi-line constructs
-        errors.addAll(analyzeMultiLineFunctionDefs(lines))
-        errors.addAll(analyzeMultiLineClassDefs(lines))
-        errors.addAll(analyzeMultiLineControlStructures(lines))
-        errors.addAll(analyzeMultiLineStringLiterals(lines))
-        errors.addAll(analyzeMultiLineExpressions(lines))
+        // Only analyze if we have OBVIOUS structural issues
+        if (lines.size <= 1) return errors
+        
+        for ((lineIndex, line) in lines.withIndex()) {
+            val trimmed = line.trim()
+            if (trimmed.isEmpty() || trimmed.startsWith("#")) continue
+            
+            // ULTRA-SPECIFIC: Only flag OBVIOUS missing colons
+            val controlKeywords = listOf("if", "elif", "for", "while", "def", "class", "try", "except", "finally", "with")
+            
+            for (keyword in controlKeywords) {
+                // VERY restrictive pattern to avoid false positives
+                if ((trimmed == keyword) || // Just the keyword alone
+                    (trimmed.startsWith("$keyword ") && 
+                    !trimmed.endsWith(":") && 
+                    !trimmed.contains("=") && 
+                    !trimmed.endsWith("\\") &&
+                    !trimmed.contains("(") &&
+                    !trimmed.contains("[") &&
+                    !trimmed.contains("{") &&
+                    trimmed.split("\\s+".toRegex()).size >= 2 && // Has content after keyword
+                    trimmed.length > keyword.length + 3)) { // Substantial content
+                    
+                    // Double-check this isn't a valid construct
+                    if (!isValidControlStructure(trimmed)) {
+                        errors.add(PythonSyntaxError(
+                            type = ErrorType.CONTROL_FLOW,
+                            severity = ErrorSeverity.ERROR,
+                            message = "Missing colon ':' after $keyword statement",
+                            line = lineIndex,
+                            column = trimmed.length,
+                            length = 1,
+                            suggestion = "Add ':' at the end of the $keyword statement",
+                            confidence = 0.98, // Very high confidence
+                            ruleId = "PYTHON_MISSING_COLON_CONFIRMED",
+                            quickFixes = listOf("Add ':'", "Fix $keyword syntax")
+                        ))
+                    }
+                }
+            }
+        }
         
         return errors
     }
+
+    private fun isValidControlStructure(line: String): Boolean {
+        return when {
+            // Already has colon
+            line.endsWith(":") -> true
+            
+            // Part of a multi-line structure
+            line.endsWith("\\") -> true
+            
+            // Inside parentheses (multi-line condition)
+            line.contains("(") && !line.contains(")") -> true
+            
+            // Assignment or other valid construct
+            line.contains("=") && !line.startsWith("if") && !line.startsWith("while") -> true
+            
+            else -> false
+        }
+    }
+
+
+    private fun analyzeDefinitionStructures(code: String): List<PythonSyntaxError> {
+        val errors = mutableListOf<PythonSyntaxError>()
+        val lines = code.lines()
+        
+        for ((lineIndex, line) in lines.withIndex()) {
+            val trimmed = line.trim()
+            
+            // Check function definitions
+            if (trimmed.startsWith("def ")) {
+                if (!trimmed.contains("(") || !trimmed.contains(")")) {
+                    errors.add(PythonSyntaxError(
+                        type = ErrorType.FUNCTION_DEF,
+                        severity = ErrorSeverity.ERROR,
+                        message = "Invalid function definition syntax",
+                        line = lineIndex,
+                        column = 0,
+                        length = trimmed.length,
+                        suggestion = "Function definition needs parentheses: def name():",
+                        confidence = 0.95,
+                        ruleId = "PYTHON_INVALID_FUNCTION_DEF"
+                    ))
+                }
+            }
+            
+            // Check class definitions
+            if (trimmed.startsWith("class ") && !trimmed.endsWith(":")) {
+                errors.add(PythonSyntaxError(
+                    type = ErrorType.CLASS_DEF,
+                    severity = ErrorSeverity.ERROR,
+                    message = "Class definition missing colon",
+                    line = lineIndex,
+                    column = trimmed.length,
+                    length = 1,
+                    suggestion = "Add ':' at the end of class definition",
+                    confidence = 0.95,
+                    ruleId = "PYTHON_CLASS_NO_COLON"
+                ))
+            }
+        }
+        
+        return errors
+    }
+
+    // Add these helper methods to your AIErrorAnnotator class:
+    private fun extractKeywordFromPattern(patternName: String, context: String): String {
+        return when {
+            patternName.contains("IF") -> "if"
+            patternName.contains("ELIF") -> "elif"
+            patternName.contains("ELSE") -> "else"
+            patternName.contains("FOR") -> "for"
+            patternName.contains("WHILE") -> "while"
+            patternName.contains("DEF") -> "def"
+            patternName.contains("CLASS") -> "class"
+            patternName.contains("TRY") -> "try"
+            patternName.contains("EXCEPT") -> "except"
+            patternName.contains("FINALLY") -> "finally"
+            patternName.contains("WITH") -> "with"
+            patternName.contains("ASYNC") -> "async"
+            else -> {
+                // Fallback: extract from context
+                PYTHON_CONTROL_KEYWORDS.find { context.trim().startsWith("$it ") } ?: "statement"
+            }
+        }
+    }
+
+    private fun findStringStart(context: String): Int {
+        val singleQuote = context.indexOf('\'')
+        val doubleQuote = context.indexOf('"')
+        
+        return when {
+            singleQuote >= 0 && doubleQuote >= 0 -> minOf(singleQuote, doubleQuote)
+            singleQuote >= 0 -> singleQuote
+            doubleQuote >= 0 -> doubleQuote
+            else -> 0
+        }
+    }
+
+    private fun findTripleQuoteStart(context: String): Int {
+        val tripleDouble = context.indexOf("\"\"\"")
+        val tripleSingle = context.indexOf("'''")
+        
+        return when {
+            tripleDouble >= 0 && tripleSingle >= 0 -> minOf(tripleDouble, tripleSingle)
+            tripleDouble >= 0 -> tripleDouble
+            tripleSingle >= 0 -> tripleSingle
+            else -> 0
+        }
+    }
+
+    private fun extractFunctionName(context: String): String {
+        val match = Regex("""def\s+(\w+)""").find(context)
+        return match?.groupValues?.getOrNull(1) ?: "function"
+    }
+
+    private fun extractClassName(context: String): String {
+        val match = Regex("""class\s+(\w+)""").find(context)
+        return match?.groupValues?.getOrNull(1) ?: "class"
+    }
+
+    private fun findLastOperator(context: String): Int {
+        val operators = "+-*/=<>!&|^~"
+        return context.indexOfLast { it in operators }.takeIf { it >= 0 } ?: 0
+    }
+
+
+    private fun analyzeAsyncAwaitUsage(code: String): List<PythonSyntaxError> {
+        val errors = mutableListOf<PythonSyntaxError>()
+        val lines = code.lines()
+        
+        for ((lineIndex, line) in lines.withIndex()) {
+            val trimmed = line.trim()
+            
+            if (trimmed.contains("await ") && !lines.take(lineIndex + 1).any { it.contains("async def") }) {
+                errors.add(PythonSyntaxError(
+                    type = ErrorType.ASYNC_AWAIT,
+                    severity = ErrorSeverity.ERROR,
+                    message = "'await' used outside async function",
+                    line = lineIndex,
+                    column = trimmed.indexOf("await"),
+                    length = 5,
+                    suggestion = "Use 'await' inside an async function",
+                    confidence = 0.9,
+                    ruleId = "PYTHON_AWAIT_OUTSIDE_ASYNC"
+                ))
+            }
+        }
+        
+        return errors
+    }
+
+    private fun analyzeImportStatements(code: String): List<PythonSyntaxError> {
+        val errors = mutableListOf<PythonSyntaxError>()
+        val lines = code.lines()
+        
+        for ((lineIndex, line) in lines.withIndex()) {
+            val trimmed = line.trim()
+            
+            if (trimmed.startsWith("import ") && trimmed == "import") {
+                errors.add(PythonSyntaxError(
+                    type = ErrorType.IMPORT_ERROR,
+                    severity = ErrorSeverity.ERROR,
+                    message = "Incomplete import statement",
+                    line = lineIndex,
+                    column = 0,
+                    length = trimmed.length,
+                    suggestion = "Specify module name: import module_name",
+                    confidence = 0.95,
+                    ruleId = "PYTHON_INCOMPLETE_IMPORT"
+                ))
+            }
+            
+            if (trimmed.startsWith("from ") && !trimmed.contains("import")) {
+                errors.add(PythonSyntaxError(
+                    type = ErrorType.IMPORT_ERROR,
+                    severity = ErrorSeverity.ERROR,
+                    message = "from statement missing import clause",
+                    line = lineIndex,
+                    column = 0,
+                    length = trimmed.length,
+                    suggestion = "Add import clause: from module import name",
+                    confidence = 0.95,
+                    ruleId = "PYTHON_FROM_NO_IMPORT"
+                ))
+            }
+        }
+        
+        return errors
+    }
+
+    private fun analyzeExceptionHandling(code: String): List<PythonSyntaxError> {
+        val errors = mutableListOf<PythonSyntaxError>()
+        val lines = code.lines()
+        
+        for ((lineIndex, line) in lines.withIndex()) {
+            val trimmed = line.trim()
+            
+            if (trimmed == "except" || (trimmed.startsWith("except ") && !trimmed.endsWith(":"))) {
+                errors.add(PythonSyntaxError(
+                    type = ErrorType.EXCEPTION,
+                    severity = ErrorSeverity.ERROR,
+                    message = "except statement missing colon",
+                    line = lineIndex,
+                    column = trimmed.length,
+                    length = 1,
+                    suggestion = "Add ':' at the end of except statement",
+                    confidence = 0.95,
+                    ruleId = "PYTHON_EXCEPT_NO_COLON"
+                ))
+            }
+        }
+        
+        return errors
+    }
+
+    
+
+    private fun checkControlStructureHasValidBody(lines: List<String>, controlLineIndex: Int): Boolean {
+        if (controlLineIndex >= lines.size - 1) return false
+        
+        val controlLine = lines[controlLineIndex]
+        val controlIndent = controlLine.takeWhile { it == ' ' || it == '\t' }.length
+        
+        // Look for the next non-empty, non-comment line
+        for (i in (controlLineIndex + 1) until lines.size) {
+            val line = lines[i]
+            val trimmed = line.trim()
+            
+            if (trimmed.isEmpty() || trimmed.startsWith("#")) continue
+            
+            val lineIndent = line.takeWhile { it == ' ' || it == '\t' }.length
+            
+            // If we find a line with greater indentation, the control structure has a body
+            if (lineIndent > controlIndent) {
+                return true
+            }
+            
+            // If we find a line with equal or less indentation, check if it's another control structure
+            if (lineIndent <= controlIndent) {
+                // This could be the end of the block or another construct at the same level
+                return true // Assume it's valid for now
+            }
+        }
+        
+        return false // No body found
+    }
+
+
     
     private fun analyzeMultiLineFunctionDefs(lines: List<String>): List<PythonSyntaxError> {
         val errors = mutableListOf<PythonSyntaxError>()
@@ -2500,15 +2778,79 @@ class AIErrorAnnotator : Annotator {
     
     private fun applyIntelligentFiltering(errors: List<PythonSyntaxError>, element: PsiElement): List<PythonSyntaxError> {
         return errors
-            .filter { it.confidence >= 0.90 } // Increased confidence requirement
+            .filter { it.confidence >= 0.98 } // Only ultra-high confidence errors
+            .filter { !isLikelyFalsePositive(it, element) } // Additional false positive filter
+            .filter { isGenuineError(it) } // Final validation
             .distinctBy { "${it.line}_${it.column}_${it.type.name}" }
             .sortedWith(
                 compareByDescending<PythonSyntaxError> { it.severity.ordinal }
                     .thenBy { it.line }
                     .thenBy { it.column }
             )
-            .take(5) // Reduced from 15 to 5 to minimize noise
+            .take(2) // Reduced to only 2 most confident errors
     }
+
+    private fun isLikelyFalsePositive(error: PythonSyntaxError, element: PsiElement): Boolean {
+        val context = error.context.trim()
+        
+        return when {
+            // Skip errors on any assignments
+            context.contains("=") && !context.startsWith("if") && !context.startsWith("while") -> true
+            
+            // Skip errors on expressions with parentheses/brackets
+            context.contains("(") || context.contains("[") || context.contains("{") -> true
+            
+            // Skip errors on obviously complete statements
+            context.endsWith(")") || context.endsWith("]") || context.endsWith("}") -> true
+            
+            // Skip errors on function calls
+            context.matches(Regex(""".*\w+\([^)]*\).*""")) -> true
+            
+            // Skip errors on imports
+            context.startsWith("import ") || context.startsWith("from ") -> true
+            
+            // Skip errors on simple expressions
+            context.length < 8 && !PYTHON_CONTROL_KEYWORDS.any { context.startsWith(it) } -> true
+            
+            else -> false
+        }
+    }
+
+    private fun hasMajorDelimiterIssues(text: String): Boolean {
+        // Only flag MAJOR imbalances (difference > 2)
+        val openParens = text.count { it == '(' }
+        val closeParens = text.count { it == ')' }
+        val openBrackets = text.count { it == '[' }
+        val closeBrackets = text.count { it == ']' }
+        val openBraces = text.count { it == '{' }
+        val closeBraces = text.count { it == '}' }
+        
+        return (kotlin.math.abs(openParens - closeParens) > 2) ||
+            (kotlin.math.abs(openBrackets - closeBrackets) > 2) ||
+            (kotlin.math.abs(openBraces - closeBraces) > 2)
+    }
+
+
+    private fun isGenuineError(error: PythonSyntaxError): Boolean {
+        val context = error.context.trim()
+        
+        return when (error.type) {
+            ErrorType.CONTROL_FLOW -> {
+                // Only genuine missing colon errors
+                PYTHON_CONTROL_KEYWORDS.any { context.startsWith("$it ") } &&
+                !context.endsWith(":") &&
+                !context.contains("=") &&
+                context.split("\\s+".toRegex()).size >= 2
+            }
+            ErrorType.BRACKET_MISMATCH -> {
+                // Only major bracket imbalances
+                hasMajorDelimiterIssues(context)
+            }
+            else -> error.confidence >= 0.98
+        }
+    }
+
+
 
     
     private fun createComprehensiveAnnotations(
@@ -2864,27 +3206,9 @@ class AIErrorAnnotator : Annotator {
     }
     
     // Analyze additional structural patterns
-    private fun analyzeDefinitionStructures(code: String): List<PythonSyntaxError> {
-        val errors = mutableListOf<PythonSyntaxError>()
-        // Implementation for definition structure analysis...
-        return errors
-    }
     
-    private fun analyzeImportStatements(code: String): List<PythonSyntaxError> {
-        val errors = mutableListOf<PythonSyntaxError>()
-        // Implementation for import analysis...
-        return errors
-    }
     
-    private fun analyzeExceptionHandling(code: String): List<PythonSyntaxError> {
-        val errors = mutableListOf<PythonSyntaxError>()
-        // Implementation for exception handling analysis...
-        return errors
-    }
     
-    private fun analyzeAsyncAwaitUsage(code: String): List<PythonSyntaxError> {
-        val errors = mutableListOf<PythonSyntaxError>()
-        // Implementation for async/await analysis...
-        return errors
-    }
+    
+
 }
