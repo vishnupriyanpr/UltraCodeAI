@@ -1,212 +1,318 @@
+<!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
 <idea-plugin>
-    <id>com.ultracodeai.plugin</id>
+
+    <!-- Unique identifier of the plugin. It should be FQN. It cannot be changed between the plugin versions. -->
+    <id>com.devoxx.genie</id>
+
+    <!-- Public plugin name should be written in Title Case.
+         Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-name -->
     <name>UltraCodeAI</name>
-    <version>1.0.0</version>
-    <vendor email="support@ultracodeai.com" url="https://github.com/ultracodeai/plugin">UltraCodeAI Team</vendor>
 
+    <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
+    <vendor email="info@ultracodeai.com" url="https://ultracodeai.com">Team MeshMinds</vendor>
+
+    <idea-version since-build="233"/>
+
+    <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager.
+         Simple HTML elements (text formatting, paragraphs, and lists) can be added inside of <![CDATA[ ]]> tag.
+         Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-description -->
     <description><![CDATA[
-    <div>
-    <h2>🚀 UltraCodeAI - Local AI-Powered Coding Assistant</h2>
-    <p>Transform PyCharm into the ultimate AI-powered development environment with local Qwen 2.5 Coder integration.</p>
+        <p>UltraCode IDEA Plugin</p>
 
-    <h3>✨ Key Features:</h3>
-    <ul>
-        <li><b>🤖 Smart Code Completion:</b> Context-aware AI suggestions as you type</li>
-        <li><b>🔍 Real-time Error Detection:</b> AI-powered bug detection beyond traditional linting</li>
-        <li><b>💬 Interactive AI Chat:</b> Natural language programming assistance</li>
-        <li><b>📖 Code Explanation:</b> Understand complex code with AI-generated explanations</li>
-        <li><b>🔒 Privacy-First:</b> All processing done locally - no data sent to cloud</li>
-        <li><b>⚡ Multi-Language Support:</b> Python, JavaScript, TypeScript, and more</li>
-        <li><b>🎯 Optimized Performance:</b> Designed for RTX 4060 8GB VRAM + 16GB RAM systems</li>
-    </ul>
-
-    <h3>📋 Requirements:</h3>
-    <ul>
-        <li><b>Ollama</b> installed with <code>qwen2.5-coder:7b</code> model</li>
-        <li><b>8GB+ RAM</b> recommended</li>
-        <li><b>GPU with 8GB+ VRAM</b> for optimal performance</li>
-        <li><b>PyCharm 2023.2+</b></li>
-    </ul>
-
-    <h3>🚀 Quick Setup:</h3>
-    <ol>
-        <li>Install Ollama: <code>curl -fsSL https://ollama.ai/install.sh | sh</code></li>
-        <li>Pull model: <code>ollama pull qwen2.5-coder:7b</code></li>
-        <li>Start server: <code>ollama serve</code></li>
-        <li>Restart PyCharm and enjoy AI-powered coding!</li>
-    </ol>
-
-    <p><a href="https://github.com/ultracodeai/plugin">📚 Documentation</a> |
-       <a href="https://github.com/ultracodeai/plugin/issues">🐛 Report Issues</a> |
-       <a href="https://discord.gg/ultracodeai">💬 Community</a></p>
-    </div>
+        <h3>Key Features</h3>
+        <UL>
+            <LI>Support for local and cloud based language models: Ollama, OpenAI, Anthropic, Groq, ...</LI>
+            <LI>User defined prompts for selected code snippets</LI>
+        </UL>
+        <h3>Set-Up</h3>
+        <UL>
+            <LI>Install the plugin</LI>
+            <LI>Make sure you have Ollama, LMStudio or GPT4All running</LI>
+            <LI>Optional: Add API Keys for Cloud based LLM providers</LI>
+            <LI>Optional: Update the command prompts in the Settings</LI>
+            <LI>Start using the plugin</LI>
+        </UL>
     ]]></description>
 
     <change-notes><![CDATA[
-    <div>
-    <h3>🎉 v1.0.0 - Initial Release (December 2024)</h3>
-    <ul>
-        <li>🤖 <b>Local AI Integration:</b> Full Qwen 2.5 Coder 7B support via Ollama</li>
-        <li>🚀 <b>Smart Code Completion:</b> Context-aware suggestions with confidence scoring</li>
-        <li>🔍 <b>Real-time Error Detection:</b> AI-powered analysis with quick fixes</li>
-        <li>💬 <b>Interactive Chat Panel:</b> Natural language coding assistance</li>
-        <li>📖 <b>Code Explanation:</b> Right-click to understand any code block</li>
-        <li>⚙️ <b>Comprehensive Settings:</b> Full customization of AI behavior</li>
-        <li>🎯 <b>Multi-Language Support:</b> Python, JavaScript, TypeScript, and more</li>
-        <li>⚡ <b>Performance Optimized:</b> Efficient caching and resource management</li>
-        <li>🔒 <b>Privacy Focused:</b> All processing done locally on your machine</li>
-        <li>🛠️ <b>Developer-Friendly:</b> Extensive logging and debugging options</li>
-    </ul>
-
-    <h4>🎯 Perfect for:</h4>
-    <ul>
-        <li>Developers working on proprietary codebases</li>
-        <li>Teams requiring privacy and data security</li>
-        <li>Local development without internet dependencies</li>
-        <li>Learning and understanding complex algorithms</li>
-        <li>Code quality improvement and optimization</li>
-    </ul>
-    </div>
+        <h2>v0.7.0</h2>
+        <UL>
+            <LI>Added Claude Sonnet 3.5 v2 to Amazon Bedrock models</LI>
+            <LI>Added configuration setting to enable/disable regional inference for Amazon Bedrock models (i.e. prefixing model names with 'us', 'eu', or 'apac')</LI>
+            <LI>Fixed issue where the entire file was added in the context when adding code snippet</LI>
+            <LI>Fixed fallback for empty submit and newline shortcuts on macOS 15.5 with IntelliJ IDEA 2025.1.3</LI>
+            <LI>Fixed duplicated user message issue</LI>
+            <LI>Configure Dependabot for Gradle dependencies</LI>
+            <LI>Bump the gradle-dependencies group with 22 updates (AWS SDK, Retrofit, SQLite, Docker Java, JTokkit, CommonMark, Netty, Logback, and more)</LI>
+            <LI>Bump brace-expansion from 1.1.11 to 1.1.12 in /docusaurus</LI>
+        </UL>
+        <h2>v0.6.9</h2>
+        <UL>
+            <LI>Issue #725: Langchain4J MCP ToolSpecificationHelper fix</LI>
+            <LI>Feat: Added support for SSO login (AWS Profile)</LI>
+            <LI>Feat #741: Add human-in-the-loop for MCP</LI>
+            <LI>Fix #745: Support IntelliJ Platform version 2025.2</LI>
+        </UL>
+        <h2>v0.6.7</h2>
+        <UL>
+            <LI>Issue #698: Black panel after "restart" next day</LI>
+            <LI>Feat #699: Add (or not) current open file in window context (New LLM option settings)</LI>
+            <LI>Feat #787: Add file" icon should move cursor/focus to "Type to search..." field by default</LI>
+            <LI>Fix #717: User prompts should rendered as markdown</LI>
+            <LI>Feat #700: Conversation history returns full conversation</LI>
+            <LI>Fix #685: Open browser when links are clicked in conversation webview</LI>
+            <LI>Fix #705: Removed obsolete GitDiff/Merge replaced by MCP</LI>
+            <LI>Feat #723: Show msg when default file is included in context</LI>
+        </UL>
+        <h2>v0.6.6</h2>
+        <UL>
+            <LI>Feat #701 : Support for Claude 4</LI>
+        </UL>
+        <h2>v0.6.5</h2>
+        <UL>
+            <LI>Feat #695 : Support for Grok as frontier cloud model</LI>
+        </UL>
+        <h2>v0.6.4</h2>
+        <UL>
+            <LI>Fix #690 : Show message when JCEF is not available</LI>
+        </UL>
+        <h2>v0.6.3</h2>
+        <UL>
+            <LI>Fix #677: Fixed new conversation is immediately added to history</LI>
+            <LI>Feat #679 : Add “Custom OpenAI HTTP 1.1” toggle for custom OpenAI provider by @denis-kudelin</LI>
+            <LI>Fix #683 : With Dark theme, light background was used by @mydeveloperplanet</LI>
+            <LI>Fix #681 : Escape html tags in the response by @mydeveloperplanet</LI>
+            <LI>Feat #688 : Replaced Google Gemini 2.5 Pro with 05-06 version by @stephanj</LI>
+            <LI>Fix #677 : Fix for new conversation being immediately added to history by @stephanj</LI>
+        </UL>
+        <h2>v0.6.2</h2>
+        <UL>
+            <LI>Feat: Improved MCP output in web view</LI>
+        </UL>
+        <h2>v0.6.1</h2>
+        <UL>
+            <LI>Feat: Appearance settings added so we can customize UI output panel</LI>
+            <LI>Fix #671 : Copy user prompt, and response and use markdown</LI>
+        </UL>
+        <h2>v0.6.0</h2>
+        <UL>
+            <LI>Feat: WebView-based response panel with PrismJS for syntax highlighting</LI>
+            <LI>Feat: Improved code block rendering and copy functionality</LI>
+            <LI>Feat: Better code syntax highlighting across all languages</LI>
+            <LI>Feat: Enhanced streaming responses with WebView</LI>
+            <LI>Feat: Enable MCP servers from input field</LI>
+            <LI>Feat: Include code snippet or files in context when MCP is enabled</LI>
+            <LI>Feat: Support MCP in streaming mode</LI>
+        </UL>
+        <h2>v0.5.12</h2>
+        <UL>
+            <LI>Feat #562 : Fix for horizontal large text responses</LI>
+         </UL>
+        <h2>v0.5.11</h2>
+        <UL>
+            <LI>Feat #651 : Added gemini-2.5-flash-preview-04-17</LI>
+            <LI>Fix  #655 : UltraCodeAI settings panel blocks UI</LI>
+            <LI>Feat #657 : Init RAG async</LI>
+            <LI>Fix  #657 : Make RAG process more robust</LI>
+            <LI>Feat #658 : Improve the MCP logging UI/UX</LI>
+        </UL>
+        <h2>v0.5.10</h2>
+        <UL>
+            <LI>Fix #649 : LMStudio does not return a response</LI>
+        </UL>
+        <h2>v0.5.9</h2>
+        <UL>
+            <LI>Feat #646 : Support for GPT 4.1, mini and nano</LI>
+        </UL>
+        <h2>v0.5.8</h2>
+        <UL>
+            <LI>Fix #644 : MCP Functionality Issue on Windows Platform</LI>
+        </UL>
+        <h2>v0.5.7</h2>
+        <UL>
+            <LI>Fix #545 : Use Bedrock model name with 'us' prefix to make it work 'us.anthropic.claude-3-7-sonnet-20250219-v1:0'</LI>
+            <LI>Feat #630 : Update Bedrock model Id with eu,us,apac prefix when using Anthropic, LLama</LI>
+            <LI>Feat #632 : Stopping a chat which is running doesn't stop the MCP process</LI>
+            <LI>Feat #635 : Add MCP Envs is same window</LI>
+            <LI>Feat #638 : Migrated to Langchain4J v1.0.0 beta3</LI>
+            <LI>Fix #624 : Font size problem in streaming response fixed</LI>
+        </UL>
+        <h2>v0.5.6</h2>
+        <UL>
+            <LI>Fix #620 : Renamed Google Gemini model to gemini-2.5-pro-preview-03-25</LI>
+            <LI>Fix #622 : Fix MCP config screen still shows incorrectly the SSE settings</LI>
+        </UL>
     ]]></change-notes>
 
-    <!-- Compatibility - PyCharm focused -->
+    <!-- Product and plugin compatibility requirements.
+         Read more: https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->
     <depends>com.intellij.modules.platform</depends>
-    <depends>com.intellij.modules.lang</depends>
-    <depends optional="true">com.intellij.modules.python</depends>
-    <!-- Removed python-support.xml reference as it may not exist -->
 
-    <!-- Plugin Properties -->
-    <resource-bundle>messages.UltraCodeAIBundle</resource-bundle>
+    <!-- Extension points defined by the plugin.
+         Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
+    <extensions defaultExtensionNs="com.intellij">
+
+        <projectConfigurable parentId="tools"
+                             id="com.devoxx.genie.DevoxxGenie"
+                             instance="com.devoxx.genie.ui.settings.llm.LLMProvidersConfigurable"
+                             displayName="DevoxxGenie"/>
+
+        <projectConfigurable id="com.devoxx.genie.LLMSettings"
+                             parentId="com.devoxx.genie.DevoxxGenie"
+                             instance="com.devoxx.genie.ui.settings.llmconfig.LLMConfigSettingsConfigurable"
+                             displayName="LLM Settings"/>
+
+        <projectConfigurable id="com.devoxx.genie.PromptSettings"
+                             parentId="com.devoxx.genie.DevoxxGenie"
+                             instance="com.devoxx.genie.ui.settings.prompt.PromptSettingsConfigurable"
+                             displayName="Prompts"/>
+
+        <projectConfigurable id="com.devoxx.genie.mcpsettings"
+                             parentId="com.devoxx.genie.DevoxxGenie"
+                             instance="com.devoxx.genie.ui.settings.mcp.MCPSettingsConfigurable"
+                             displayName="MCP Settings (BETA)"/>
+
+        <projectConfigurable id="com.devoxx.genie.WebSearch"
+                             parentId="com.devoxx.genie.DevoxxGenie"
+                             instance="com.devoxx.genie.ui.settings.websearch.WebSearchProvidersConfigurable"
+                             displayName="Web search"/>
+
+        <projectConfigurable id="com.devoxx.genie.CopyProjectSettings"
+                             parentId="com.devoxx.genie.DevoxxGenie"
+                             instance="com.devoxx.genie.ui.settings.copyproject.CopyProjectSettingsConfigurable"
+                             displayName="Scan &amp; Copy Project"/>
+
+        <projectConfigurable id="com.devoxx.genie.RAG"
+                             parentId="com.devoxx.genie.DevoxxGenie"
+                             instance="com.devoxx.genie.ui.settings.rag.RAGSettingsConfigurable"
+                             displayName="RAG"/>
+
+        <projectConfigurable id="com.devoxx.genie.appearance"
+                             parentId="com.devoxx.genie.DevoxxGenie"
+                             instance="com.devoxx.genie.ui.settings.appearance.AppearanceSettingsConfigurable"
+                             displayName="Appearance"/>
+
+        <projectConfigurable id="com.devoxx.genie.llmfeatures"
+                             parentId="com.devoxx.genie.DevoxxGenie"
+                             instance="com.devoxx.genie.ui.settings.costsettings.LanguageModelCostSettingsConfigurable"
+                             displayName="Token Cost &amp; Context Window"/>
+
+        <toolWindow id="DevoxxGenie"
+                    anchor="right"
+                    icon="/icons/pluginIcon.svg"
+                    factoryClass="com.devoxx.genie.ui.window.DevoxxGenieToolWindowFactory"/>
+
+        <toolWindow id="DevoxxGenieMCPLogs"
+                    anchor="bottom"
+                    icon="/icons/logIcon.svg"
+                    secondary="true"
+                    doNotActivateOnStart="true"
+                    canCloseContents="true"
+                    factoryClass="com.devoxx.genie.ui.window.MCPLogToolWindowFactory"/>
+
+        <applicationService serviceImplementation="com.devoxx.genie.ui.settings.DevoxxGenieStateService"/>
+        <applicationService serviceImplementation="com.devoxx.genie.service.conversations.ConversationStorageService"/>
+        <applicationService serviceImplementation="com.devoxx.genie.service.prompt.response.nonstreaming.NonStreamingPromptExecutionService"/>
+        <applicationService serviceImplementation="com.devoxx.genie.service.prompt.memory.ChatMemoryService"/>
+        <applicationService serviceImplementation="com.devoxx.genie.service.prompt.threading.ThreadPoolManager"/>
+        <applicationService serviceImplementation="com.devoxx.genie.service.prompt.threading.PromptTaskTracker"/>
+        <applicationService serviceImplementation="com.devoxx.genie.service.prompt.memory.ChatMemoryManager"/>
+        <applicationService serviceImplementation="com.devoxx.genie.service.prompt.command.PromptCommandProcessor"/>
+        <applicationService serviceImplementation="com.devoxx.genie.service.prompt.strategy.PromptExecutionStrategyFactory"/>
+        <applicationService serviceImplementation="com.devoxx.genie.service.prompt.cancellation.PromptCancellationService"/>
+        <projectService serviceImplementation="com.devoxx.genie.service.prompt.PromptExecutionService"/>
+        <applicationService serviceImplementation="com.devoxx.genie.service.MessageCreationService"/>
+        <applicationService serviceImplementation="com.devoxx.genie.ui.panel.PromptPanelRegistry"/>
+        <applicationService serviceImplementation="com.devoxx.genie.chatmodel.local.ollama.OllamaModelService"/>
+        <applicationService serviceImplementation="com.devoxx.genie.chatmodel.local.gpt4all.GPT4AllModelService"/>
+        <applicationService serviceImplementation="com.devoxx.genie.service.prompt.websearch.WebSearchPromptExecutionService"/>
+        <applicationService serviceImplementation="com.devoxx.genie.service.LLMProviderService"/>
+        <applicationService serviceImplementation="com.devoxx.genie.service.PropertiesService"/>
+        <applicationService serviceImplementation="com.devoxx.genie.service.projectscanner.ProjectScannerService"/>
+        <applicationService serviceImplementation="com.devoxx.genie.service.ProjectContentService"/>
+        <applicationService serviceImplementation="com.devoxx.genie.service.TokenCalculationService"/>
+        <applicationService serviceImplementation="com.devoxx.genie.chatmodel.local.lmstudio.LMStudioModelService"/>
+        <applicationService serviceImplementation="com.devoxx.genie.chatmodel.cloud.openrouter.OpenRouterService"/>
+        <applicationService serviceImplementation="com.devoxx.genie.chatmodel.cloud.bedrock.BedrockService"/>
+        <applicationService serviceImplementation="com.devoxx.genie.chatmodel.local.jan.JanModelService"/>
+        <applicationService serviceImplementation="com.devoxx.genie.service.mcp.MCPExecutionService"/>
+        <applicationService serviceImplementation="com.devoxx.genie.service.chromadb.ChromaDockerService"/>
+        <applicationService serviceImplementation="com.devoxx.genie.service.rag.ProjectIndexerService"/>
+        <!-- New service for WebView implementation -->
+        <applicationService serviceImplementation="com.devoxx.genie.ui.webview.WebServer"/>
+        <!-- Appearance settings handler -->
+        <applicationService serviceImplementation="com.devoxx.genie.ui.settings.appearance.AppearanceRefreshHandler"/>
+    </extensions>
+
+    <extensionPoints>
+        <extensionPoint name="projectScannerExtension"
+                        interface="com.devoxx.genie.service.analyzer.ProjectAnalyzerExtension"/>
+    </extensionPoints>
+
+    <!-- Optional dependencies for enhanced functionality in specific IDEs -->
+    <depends optional="true" config-file="java-features.xml">com.intellij.modules.java</depends>
+    <depends optional="true" config-file="php-features.xml">com.jetbrains.php</depends>
+    <depends optional="true" config-file="python-features.xml">com.intellij.modules.python</depends>
+    <depends optional="true" config-file="clion-features.xml">com.intellij.modules.clion</depends>
+    <depends optional="true" config-file="rust-features.xml">org.rust.lang</depends>
+    <depends optional="true" config-file="webstorm-features.xml">JavaScript</depends>
+    <depends optional="true" config-file="kotlin-features.xml">org.jetbrains.kotlin</depends>
+    <depends optional="true" config-file="goland-features.xml">org.jetbrains.plugins.go</depends>
 
     <extensions defaultExtensionNs="com.intellij">
-        <!-- Application Services -->
-        <applicationService serviceImplementation="com.ultracodeai.services.AIModelService"/>
-        <applicationService serviceImplementation="com.ultracodeai.utils.SettingsState"/>
-
-        <!-- Project Services -->
-        <projectService serviceImplementation="com.ultracodeai.services.CodeCompletionService"/>
-        <projectService serviceImplementation="com.ultracodeai.services.ErrorDetectionService"/>
-        <projectService serviceImplementation="com.ultracodeai.services.ExplanationService"/>
-
-        <!-- UI Extensions -->
-        <toolWindow id="UltraCodeAI"
-            anchor="right"
-            factoryClass="com.ultracodeai.ui.ChatToolWindowFactory"
-            icon="/icons/chat.svg"/>
-
-        <!-- Code Completion - PyCharm Compatible Languages Only -->
-        <completion.contributor
-            language="Python"
-            implementationClass="com.ultracodeai.completion.AICompletionContributor"
-            order="first"/>
-        <completion.contributor
-            language="JavaScript"
-            implementationClass="com.ultracodeai.completion.AICompletionContributor"
-            order="first"/>
-        <completion.contributor
-            language="TypeScript"
-            implementationClass="com.ultracodeai.completion.AICompletionContributor"
-            order="first"/>
-        <!-- Removed JAVA and kotlin as they may not be available in PyCharm Community -->
-
-        <!-- Code Inspections - PyCharm Compatible Only -->
-        <localInspection
-            language="Python"
-            shortName="UltraCodeAIInspection"
-            displayName="UltraCodeAI Analysis"
-            groupName="UltraCodeAI"
-            enabledByDefault="true"
-            level="WARNING"
-            implementationClass="com.ultracodeai.inspections.AICodeInspection"/>
-        <!-- Removed JAVA inspection -->
-
-        <!-- Annotations - PyCharm Compatible Only -->
-        <annotator
-            language="Python"
-            implementationClass="com.ultracodeai.inspections.AIErrorAnnotator"/>
-        <annotator
-            language="JavaScript"
-            implementationClass="com.ultracodeai.inspections.AIErrorAnnotator"/>
-        <annotator
-            language="TypeScript"
-            implementationClass="com.ultracodeai.inspections.AIErrorAnnotator"/>
-        <!-- Removed JAVA annotator -->
-
-        <!-- Settings -->
-        <applicationConfigurable
-            parentId="tools"
-            instance="com.ultracodeai.ui.SettingsConfigurable"
-            id="com.ultracodeai.settings"
-            displayName="UltraCodeAI"/>
-
-        <!-- Startup Activity -->
-        <postStartupActivity implementation="com.ultracodeai.UltraCodeAIPlugin"/>
-
-        <!-- Document Listener -->
-        <editorFactoryDocumentListener
-            implementation="com.ultracodeai.listeners.DocumentChangeListener"/>
+        <notificationGroup id="com.devoxx.genie.notifications" displayType="BALLOON" />
+        <postStartupActivity implementation="com.devoxx.genie.service.PostStartupActivity"/>
     </extensions>
 
     <actions>
-        <!-- Main Action Group -->
-        <group id="UltraCodeAI.MainGroup" text="UltraCodeAI" popup="true" icon="/icons/ultracodeai.svg">
-            <add-to-group group-id="MainToolBar" anchor="before" relative-to-action="VcsToolbarActions"/>
 
-            <action id="UltraCodeAI.ExplainCode"
-                class="com.ultracodeai.ui.ExplainCodeAction"
-                text="Explain Code"
-                description="Explain selected code using AI"
-                icon="/icons/explain.svg">
-                <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt E"/>
-            </action>
+        <action id="DevoxxGenie.AddSnippetAction"
+                class="com.devoxx.genie.action.AddSnippetAction"
+                text="Add To Conversation"
+                icon="/icons/pluginIcon.svg"
+                description="Add code snippet to context window">
+            <add-to-group group-id="EditorPopupMenu" anchor="last" />
+        </action>
 
-            <action id="UltraCodeAI.ToggleCompletion"
-                class="com.ultracodeai.ui.ToggleCompletionAction"
-                text="Toggle AI Completion"
-                description="Enable/disable AI code completion"/>
+        <action id="DevoxxGenie.AddFilesAction"
+                class="com.devoxx.genie.action.AddFileAction"
+                text="Add File(s) To Conversation"
+                icon="/icons/pluginIcon.svg"
+                description="Add file(s) to the conversation">
+            <add-to-group group-id="ProjectViewPopupMenu" anchor="last"/>
+        </action>
 
-            <action id="UltraCodeAI.OpenChat"
-                class="com.ultracodeai.ui.OpenChatAction"
-                text="Open AI Chat"
-                description="Open AI chat panel"
-                icon="/icons/chat.svg">
-                <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt C"/>
-            </action>
+        <action id="AddDirectoryToContextWindow"
+                class="com.devoxx.genie.action.AddDirectoryAction"
+                text="Add Directory to Conversation"
+                icon="/icons/pluginIcon.svg"
+                description="Add the selected directory to the context window">
+            <add-to-group group-id="ProjectViewPopupMenu" anchor="last"/>
+        </action>
 
-            <separator/>
+        <action id="ExcludeDirectory"
+                class="com.devoxx.genie.action.ExcludeDirectoryAction"
+                text="Exclude Directory from Add Project"
+                icon="/icons/pluginIcon.svg"
+                description="Exclude selected directory from Add Project">
+            <add-to-group group-id="ProjectViewPopupMenu" anchor="last"/>
+        </action>
 
-            <action id="UltraCodeAI.AIToolbar"
-                class="com.ultracodeai.ui.AIToolbarAction"
-                text="AI Status"
-                description="Show AI status and quick options"
-                icon="/icons/ultracodeai.svg"/>
-        </group>
+        <action id="CopyDirectoryToClipboard"
+                class="com.devoxx.genie.action.AddDirectoryAction"
+                text="Copy Directory to Clipboard"
+                icon="/icons/pluginIcon.svg"
+                description="Copy the selected directory content to clipboard">
+            <add-to-group group-id="ProjectViewPopupMenu" anchor="after" relative-to-action="AddDirectoryToContextWindow"/>
+        </action>
 
-        <!-- Context Menu Actions -->
-        <group id="UltraCodeAI.EditorContextGroup">
-            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
-            <separator/>
-            <reference ref="UltraCodeAI.ExplainCode"/>
+        <action id="CalcTokenDirectory"
+                class="com.devoxx.genie.action.CalcTokensForDirectoryAction"
+                text="Calc Tokens for Directory"
+                icon="/icons/pluginIcon.svg"
+                description="Calculate the tokens for selected directory">
+            <add-to-group group-id="ProjectViewPopupMenu" anchor="after" relative-to-action="CopyDirectoryToClipboard"/>
+        </action>
 
-            <action id="UltraCodeAI.FixCode"
-                class="com.ultracodeai.ui.FixCodeAction"
-                text="🔧 AI Fix Suggestion"
-                description="Get AI suggestions to fix code issues"/>
-
-            <action id="UltraCodeAI.GenerateTests"
-                class="com.ultracodeai.ui.GenerateTestsAction"
-                text="🧪 Generate Unit Tests"
-                description="Generate unit tests using AI"/>
-
-            <action id="UltraCodeAI.OptimizeCode"
-                class="com.ultracodeai.ui.OptimizeCodeAction"
-                text="⚡ Optimize Code"
-                description="Get AI suggestions to optimize code performance"/>
-        </group>
     </actions>
-
-    <applicationListeners>
-        <listener class="com.ultracodeai.listeners.ProjectOpenListener"
-            topic="com.intellij.openapi.project.ProjectManagerListener"/>
-    </applicationListeners>
 </idea-plugin>
