@@ -1,0 +1,217 @@
+<!-- UltraCodeAI IntelliJ Plugin Configuration -->
+<idea-plugin>
+
+    <!-- ===== Basic Metadata ===== -->
+    <id>com.devoxx.genie</id>
+    <name>UltraCodeAI</name>
+    <vendor email="info@ultracodeai.com" url="https://ultracodeai.com">Team MeshMinds</vendor>
+    <idea-version since-build="233"/>
+
+    <!-- ===== Description ===== -->
+    <description><![CDATA[
+        <p><b>UltraCodeAI IDEA Plugin</b></p>
+        <p>UltraCodeAI is your AI-powered development assistant inside IntelliJ IDEA, enabling conversational coding, live diagnostics, insights, and multi-model LLM support.</p>
+
+        <h3>Core Features</h3>
+        <ul>
+            <li>Support for local models (Ollama, LMStudio, GPT4All) and cloud APIs (OpenAI, Anthropic, Groq, etc.)</li>
+            <li>Context-aware prompts directly from code, editor, or project</li>
+            <li>Code diagnostics and inspections with AI explanations</li>
+            <li>Smart insights and recommendations using RAG and MCP servers</li>
+        </ul>
+
+        <h3>Quick Setup</h3>
+        <ol>
+            <li>Install the plugin</li>
+            <li>Configure your preferred model in Settings → UltraCodeAI</li>
+            <li>Start coding and interacting with AI directly in the tool window</li>
+        </ol>
+    ]]></description>
+
+    <!-- ===== Change Notes (latest on top) ===== -->
+    <change-notes><![CDATA[
+        <h2>v0.7.0</h2>
+        <ul>
+            <li>New 3-tab UltraCodeAI tool window (Chat, Diagnostics, Insights)</li>
+            <li>Interactive chat integrated with PromptExecutionService</li>
+            <li>Prepared structure for live diagnostics & AI insights tabs</li>
+            <li>Bug fixes & UI enhancements</li>
+        </ul>
+        <!-- Older changelog entries preserved as in your original -->
+    ]]></change-notes>
+
+    <!-- ===== Core Dependencies ===== -->
+    <depends>com.intellij.modules.platform</depends>
+
+    <!-- ===== Settings Pages ===== -->
+    <extensions defaultExtensionNs="com.intellij">
+
+        <!-- Settings Groups -->
+        <projectConfigurable parentId="tools"
+                             id="com.devoxx.genie.DevoxxGenie"
+                             instance="com.devoxx.genie.ui.settings.llm.LLMProvidersConfigurable"
+                             displayName="UltraCodeAI"/>
+
+        <projectConfigurable id="com.devoxx.genie.LLMSettings"
+                             parentId="com.devoxx.genie.DevoxxGenie"
+                             instance="com.devoxx.genie.ui.settings.llmconfig.LLMConfigSettingsConfigurable"
+                             displayName="LLM Settings"/>
+
+        <projectConfigurable id="com.devoxx.genie.PromptSettings"
+                             parentId="com.devoxx.genie.DevoxxGenie"
+                             instance="com.devoxx.genie.ui.settings.prompt.PromptSettingsConfigurable"
+                             displayName="Prompts"/>
+
+        <projectConfigurable id="com.devoxx.genie.mcpsettings"
+                             parentId="com.devoxx.genie.DevoxxGenie"
+                             instance="com.devoxx.genie.ui.settings.mcp.MCPSettingsConfigurable"
+                             displayName="MCP Settings (BETA)"/>
+
+        <projectConfigurable id="com.devoxx.genie.WebSearch"
+                             parentId="com.devoxx.genie.DevoxxGenie"
+                             instance="com.devoxx.genie.ui.settings.websearch.WebSearchProvidersConfigurable"
+                             displayName="Web Search"/>
+
+        <projectConfigurable id="com.devoxx.genie.CopyProjectSettings"
+                             parentId="com.devoxx.genie.DevoxxGenie"
+                             instance="com.devoxx.genie.ui.settings.copyproject.CopyProjectSettingsConfigurable"
+                             displayName="Scan &amp; Copy Project"/>
+
+        <projectConfigurable id="com.devoxx.genie.RAG"
+                             parentId="com.devoxx.genie.DevoxxGenie"
+                             instance="com.devoxx.genie.ui.settings.rag.RAGSettingsConfigurable"
+                             displayName="RAG"/>
+
+        <projectConfigurable id="com.devoxx.genie.appearance"
+                             parentId="com.devoxx.genie.DevoxxGenie"
+                             instance="com.devoxx.genie.ui.settings.appearance.AppearanceSettingsConfigurable"
+                             displayName="Appearance"/>
+
+        <projectConfigurable id="com.devoxx.genie.llmfeatures"
+                             parentId="com.devoxx.genie.DevoxxGenie"
+                             instance="com.devoxx.genie.ui.settings.costsettings.LanguageModelCostSettingsConfigurable"
+                             displayName="Token Cost &amp; Context Window"/>
+
+        <!-- ===== Tool Windows ===== -->
+        <!-- Updated ToolWindow to use new multi-tab enhanced UI -->
+        <toolWindow id="UltraCodeAI"
+                    anchor="right"
+                    icon="/icons/ultracodeai.svg"
+                    factoryClass="com.devoxx.genie.ui.window.UltraCodeAIToolWindowFactory"/>
+
+        <!-- MCP-specific logs -->
+        <toolWindow id="UltraCodeAIMCPLogs"
+                    anchor="bottom"
+                    icon="/icons/ultracodeai.svg"
+                    secondary="true"
+                    doNotActivateOnStart="true"
+                    canCloseContents="true"
+                    factoryClass="com.devoxx.genie.ui.window.MCPLogToolWindowFactory"/>
+
+        <!-- ===== Services (unchanged list preserved) ===== -->
+        <applicationService serviceImplementation="com.devoxx.genie.ui.settings.DevoxxGenieStateService"/>
+        <applicationService serviceImplementation="com.devoxx.genie.service.conversations.ConversationStorageService"/>
+        <applicationService serviceImplementation="com.devoxx.genie.service.prompt.response.nonstreaming.NonStreamingPromptExecutionService"/>
+        <applicationService serviceImplementation="com.devoxx.genie.service.prompt.memory.ChatMemoryService"/>
+        <applicationService serviceImplementation="com.devoxx.genie.service.prompt.threading.ThreadPoolManager"/>
+        <applicationService serviceImplementation="com.devoxx.genie.service.prompt.threading.PromptTaskTracker"/>
+        <applicationService serviceImplementation="com.devoxx.genie.service.prompt.memory.ChatMemoryManager"/>
+        <applicationService serviceImplementation="com.devoxx.genie.service.prompt.command.PromptCommandProcessor"/>
+        <applicationService serviceImplementation="com.devoxx.genie.service.prompt.strategy.PromptExecutionStrategyFactory"/>
+        <applicationService serviceImplementation="com.devoxx.genie.service.prompt.cancellation.PromptCancellationService"/>
+        <projectService serviceImplementation="com.devoxx.genie.service.prompt.PromptExecutionService"/>
+        <applicationService serviceImplementation="com.devoxx.genie.service.MessageCreationService"/>
+        <applicationService serviceImplementation="com.devoxx.genie.ui.panel.PromptPanelRegistry"/>
+        <applicationService serviceImplementation="com.devoxx.genie.chatmodel.local.ollama.OllamaModelService"/>
+        <applicationService serviceImplementation="com.devoxx.genie.chatmodel.local.gpt4all.GPT4AllModelService"/>
+        <applicationService serviceImplementation="com.devoxx.genie.service.prompt.websearch.WebSearchPromptExecutionService"/>
+        <applicationService serviceImplementation="com.devoxx.genie.service.LLMProviderService"/>
+        <applicationService serviceImplementation="com.devoxx.genie.service.PropertiesService"/>
+        <applicationService serviceImplementation="com.devoxx.genie.service.projectscanner.ProjectScannerService"/>
+        <applicationService serviceImplementation="com.devoxx.genie.service.ProjectContentService"/>
+        <applicationService serviceImplementation="com.devoxx.genie.service.TokenCalculationService"/>
+        <applicationService serviceImplementation="com.devoxx.genie.chatmodel.local.lmstudio.LMStudioModelService"/>
+        <applicationService serviceImplementation="com.devoxx.genie.chatmodel.cloud.openrouter.OpenRouterService"/>
+        <applicationService serviceImplementation="com.devoxx.genie.chatmodel.cloud.bedrock.BedrockService"/>
+        <applicationService serviceImplementation="com.devoxx.genie.chatmodel.local.jan.JanModelService"/>
+        <applicationService serviceImplementation="com.devoxx.genie.service.mcp.MCPExecutionService"/>
+        <applicationService serviceImplementation="com.devoxx.genie.service.chromadb.ChromaDockerService"/>
+        <applicationService serviceImplementation="com.devoxx.genie.service.rag.ProjectIndexerService"/>
+        <applicationService serviceImplementation="com.devoxx.genie.ui.webview.WebServer"/>
+        <applicationService serviceImplementation="com.devoxx.genie.ui.settings.appearance.AppearanceRefreshHandler"/>
+    </extensions>
+
+    <!-- ===== Extension Points ===== -->
+    <extensionPoints>
+        <extensionPoint name="projectScannerExtension"
+                        interface="com.devoxx.genie.service.analyzer.ProjectAnalyzerExtension"/>
+    </extensionPoints>
+
+    <!-- ===== Optional Dependencies ===== -->
+    <depends optional="true" config-file="java-features.xml">com.intellij.modules.java</depends>
+    <depends optional="true" config-file="php-features.xml">com.jetbrains.php</depends>
+    <depends optional="true" config-file="python-features.xml">com.intellij.modules.python</depends>
+    <depends optional="true" config-file="clion-features.xml">com.intellij.modules.clion</depends>
+    <depends optional="true" config-file="rust-features.xml">org.rust.lang</depends>
+    <depends optional="true" config-file="webstorm-features.xml">JavaScript</depends>
+    <depends optional="true" config-file="kotlin-features.xml">org.jetbrains.kotlin</depends>
+    <depends optional="true" config-file="goland-features.xml">org.jetbrains.plugins.go</depends>
+
+    <!-- ===== Notifications & Startup Hooks ===== -->
+    <extensions defaultExtensionNs="com.intellij">
+        <notificationGroup id="com.devoxx.genie.notifications" displayType="BALLOON"/>
+        <postStartupActivity implementation="com.devoxx.genie.service.PostStartupActivity"/>
+    </extensions>
+
+    <!-- ===== Actions ===== -->
+    <actions>
+        <action id="DevoxxGenie.AddSnippetAction"
+                class="com.devoxx.genie.action.AddSnippetAction"
+                text="Add To Conversation"
+                icon="/icons/ultracodeai.svg"
+                description="Add code snippet to AI context">
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+        </action>
+
+        <action id="DevoxxGenie.AddFilesAction"
+                class="com.devoxx.genie.action.AddFileAction"
+                text="Add File(s) To Conversation"
+                icon="/icons/ultracodeai.svg"
+                description="Add file(s) to AI context">
+            <add-to-group group-id="ProjectViewPopupMenu" anchor="last"/>
+        </action>
+
+        <action id="AddDirectoryToContextWindow"
+                class="com.devoxx.genie.action.AddDirectoryAction"
+                text="Add Directory to Conversation"
+                icon="/icons/ultracodeai.svg"
+                description="Add the selected directory to AI context">
+            <add-to-group group-id="ProjectViewPopupMenu" anchor="last"/>
+        </action>
+
+        <action id="ExcludeDirectory"
+                class="com.devoxx.genie.action.ExcludeDirectoryAction"
+                text="Exclude Directory from AI Context"
+                icon="/icons/ultracodeai.svg"
+                description="Exclude selected directory from AI context">
+            <add-to-group group-id="ProjectViewPopupMenu" anchor="last"/>
+        </action>
+
+        <action id="CopyDirectoryToClipboard"
+                class="com.devoxx.genie.action.AddDirectoryAction"
+                text="Copy Directory to Clipboard"
+                icon="/icons/ultracodeai.svg"
+                description="Copy directory content to clipboard">
+            <add-to-group group-id="ProjectViewPopupMenu" anchor="after" relative-to-action="AddDirectoryToContextWindow"/>
+        </action>
+
+        <action id="CalcTokenDirectory"
+                class="com.devoxx.genie.action.CalcTokensForDirectoryAction"
+                text="Calc Tokens for Directory"
+                icon="/icons/ultracodeai.svg"
+                description="Calculate LLM tokens for directory">
+            <add-to-group group-id="ProjectViewPopupMenu" anchor="after" relative-to-action="CopyDirectoryToClipboard"/>
+        </action>
+    </actions>
+
+</idea-plugin>

@@ -1,0 +1,15 @@
+.env
+build/**
+.gradle
+.idea
+*.iml
+/core/build/**
+/core/.gradle
+output-examples/**
+gradle/**
+/bin/
+/.vscode/
+/core/bin/
+.DS_Store
+**/.DS_Store
+.aider*

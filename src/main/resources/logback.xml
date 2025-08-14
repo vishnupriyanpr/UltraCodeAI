@@ -1,0 +1,16 @@
+<configuration>
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE" />
+    </root>
+
+    <logger name="com.devoxx.genie" level="INFO"/>
+    <logger name="com.devoxx.genie.ui.webview" level="ALL"/>
+    <logger name="dev.langchain4j.mcp" level="DEBUG"/>
+
+</configuration>
