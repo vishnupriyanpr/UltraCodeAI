@@ -45,7 +45,7 @@ It works with both local models (privacy-first) and cloud models (frontier capab
 
 ---
 
-Folder hints (typical layout):
+# Folder hints (typical layout):
 ```bash
   UltraCodeAI/src/main/java/com/
 ├─ ui/
