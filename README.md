@@ -186,9 +186,9 @@ MitLicense-2.0 (see LICENSE in the repo)
 ---
 
 ## 🙌 Credits
-[Vishnupriyan P R](https://github.com/vishnupriyanpr183207).  
-[Vivek K K](https://github.com/Vivek-The-Creator).  
-[Akshaya K](https://github.com/Akshaya1215).  
+[Vishnupriyan P R](https://github.com/vishnupriyanpr183207), 
+[Vivek K K](https://github.com/Vivek-The-Creator),  
+[Akshaya K](https://github.com/Akshaya1215),
 [Sanjit M](https://github.com/Sanjit-123).  
 
 Crafted by the MeshMinds. Inspired by modern agentic IDE workflows and built with the IntelliJ Platform SDK + Java.
