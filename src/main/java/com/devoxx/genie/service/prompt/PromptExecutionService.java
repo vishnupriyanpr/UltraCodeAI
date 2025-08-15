@@ -7,7 +7,6 @@ import com.devoxx.genie.service.prompt.command.PromptCommandProcessor;
 import com.devoxx.genie.service.prompt.error.ExecutionException;
 import com.devoxx.genie.service.prompt.error.PromptErrorHandler;
 import com.devoxx.genie.service.prompt.memory.ChatMemoryManager;
-import com.devoxx.genie.service.prompt.response.ResponseListener;
 import com.devoxx.genie.service.prompt.result.PromptResult;
 import com.devoxx.genie.service.prompt.strategy.PromptExecutionStrategy;
 import com.devoxx.genie.service.prompt.strategy.PromptExecutionStrategyFactory;
@@ -172,11 +171,4 @@ public class PromptExecutionService {
         enableButtons.run();
         FileListManager.getInstance().storeAddedFiles(project);
     }
-
-    public void executePrompt(String userPrompt, ResponseListener responseListener) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'executePrompt'");
-    }
-    
 }
-

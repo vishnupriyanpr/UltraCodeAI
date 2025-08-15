@@ -44,7 +44,7 @@ body {
     border-left: var(--custom-border-width) solid var(--custom-user-message-border-color);
     padding: var(--custom-message-padding) 8px;
     margin: var(--custom-message-margin) 0;
-    border-radius: var(--custom-corner-radius);
+    border-radius: ${useRoundedCorners ? 'var(--custom-corner-radius)' : '0'}px;
     color: var(--custom-user-message-text-color);
 }
 
@@ -53,7 +53,7 @@ body {
     border-left: var(--custom-border-width) solid var(--custom-assistant-message-border-color);
     padding: var(--custom-message-padding) 8px;
     margin: var(--custom-message-margin) 0;
-    border-radius: var(--custom-corner-radius);
+    border-radius: ${useRoundedCorners ? 'var(--custom-corner-radius)' : '0'}px;
     color: var(--custom-assistant-message-text-color);
 }
 
@@ -62,16 +62,12 @@ body {
     border-left: var(--custom-border-width) solid var(--tool-msg-border);
     padding: var(--custom-message-padding) 8px;
     margin: var(--custom-message-margin) 0;
-    border-radius: var(--custom-corner-radius);
+    border-radius: ${useRoundedCorners ? 'var(--custom-corner-radius)' : '0'}px;
 }
 
-/* Apply custom font sizes */
-body {
-    font-size: var(--custom-font-size);
-}
-code, .tool-result {
-    font-size: var(--custom-code-font-size);
-}
+/* Apply custom font sizes if enabled */
+${useCustomFontSize ? 'body { font-size: var(--custom-font-size); }' : ''}
+${useCustomCodeFontSize ? 'code, .tool-result { font-size: var(--custom-code-font-size); }' : ''}
 
 /* Adjust other elements to match custom settings */
 .message-pair {
