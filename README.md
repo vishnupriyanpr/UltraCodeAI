@@ -1,11 +1,14 @@
-#  ULTRACODEAI           
-## IntelliJ AI Assistant (Ultra-fast, Local + Cloud LLMs)
+#  ULTRACODEAI -  IntelliJ AI Assistant (Ultra-fast, Local + Cloud LLMs)          
 
-> "An IDE-first AI copilot for IntelliJ IDEA with chat, diagnostics, and project-aware insights." <br></br>
-> ![Platform](https://img.shields.io/badge/Platform-IntelliJ%20IDEA-blue?style=for-the-badge)
-> ![Language](https://img.shields.io/badge/Built%20With-Java%2017-red?style=for-the-badge)
-> ![UI](https://img.shields.io/badge/UI-Swing%20%7C%20JetBrains%20UI-8A2BE2?style=for-the-badge)
-> ![License](https://img.shields.io/badge/License-Apache--2.0-green?style=for-the-badge)
+<div align="center">
+    
+_*An IDE-first AI copilot for IntelliJ IDEA with chat, diagnostics, and project-aware insights.*_ <br></br>
+   [![Built on - Python](https://img.shields.io/badge/Platform-IntelliJ--Idea-blue)](#)
+   [![Built with Java17](https://img.shields.io/badge/Built-with--Java--17-red)](#)
+   ![UI](https://img.shields.io/badge/UI-Swing%20%7C%20JetBrains%20UI-8A2BE2)
+   ![License](https://img.shields.io/badge/License-MIT-2F2F2F)
+
+</div>
 
 ---
 
@@ -38,14 +41,14 @@ It works with both local models (privacy-first) and cloud models (frontier capab
 
 ## Folder hints (typical layout):
 ```bash
-UltraCodeAI/
-├── .gradle/                  
-├── .idea/                    
-├── gradle/                   
-├── src/
-│   ├── main/
-│   │   ├── java/
-│   │   │   └── com/
+UltraCodeAI 📂/
+├── .gradle 📂/                  
+├── .idea 📂/                    
+├── gradle 📂/                   
+├── src 📂/
+│   ├── main 📂/
+│   │   ├── java 📂/
+│   │   │   └── com 📂/
 │   │   │       └── ultracodeai/
 │   │   │           ├── action/             # IntelliJ actions (e.g., menu items, toolbar buttons)
 │   │   │           ├── ui/
@@ -61,11 +64,11 @@ UltraCodeAI/
 │   │   │           │   └── util/           # General utility classes
 │   │   │           ├── listener/           # Event listeners
 │   │   │           └── model/              # Data models
-│   │   └── resources/
+│   │   └── resources 📂/
 │   │       ├── META-INF/
 │   │       │   └── plugin.xml          # Plugin descriptor file
 │   │       └── icons/                  # Plugin icons
-│   └── test/
+│   └── test 📂/
 │       └── java/
 │           └── com/
 │               └── ultracodeai/
