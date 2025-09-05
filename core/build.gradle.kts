@@ -19,15 +19,15 @@ dependencies {
 
     implementation("org.commonmark:commonmark:0.25.1")
 
-    compileOnly("org.projectlombok:lombok:1.18.38")
-    annotationProcessor("org.projectlombok:lombok:1.18.38")
+    compileOnly("org.projectlombok:lombok:1.18.40")
+    annotationProcessor("org.projectlombok:lombok:1.18.40")
 
-    testImplementation("org.junit.jupiter:junit-jupiter-api:6.0.0-RC1")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:6.0.0-RC2")
     testImplementation("org.mockito:mockito-core:5.19.0")
     testImplementation("org.mockito:mockito-inline:5.2.0")
     testImplementation("org.assertj:assertj-core:3.27.4")
 
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:6.0.0-RC1")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:6.0.0-RC2")
 }
 
 java {
