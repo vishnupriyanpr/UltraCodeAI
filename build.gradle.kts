@@ -69,13 +69,13 @@ dependencies {
     implementation("dev.langchain4j:langchain4j-chroma:$lg4j_version")
 //    implementation("dev.langchain4j:langchain4j-mcp:$lg4j_version")
     implementation("dev.langchain4j:langchain4j-reactor:$lg4j_version")
-    implementation("software.amazon.awssdk:sts:2.38.5")
-    implementation("software.amazon.awssdk:sso:2.38.5")
-    implementation("software.amazon.awssdk:ssooidc:2.38.5")
+    implementation("software.amazon.awssdk:sts:2.40.6")
+    implementation("software.amazon.awssdk:sso:2.40.6")
+    implementation("software.amazon.awssdk:ssooidc:2.40.6")
 
     // Retrofit dependencies
     implementation("com.squareup.retrofit2:converter-gson:3.0.0")
-    implementation("org.xerial:sqlite-jdbc:3.51.0.0")
+    implementation("org.xerial:sqlite-jdbc:3.51.1.0")
 
     // Docker dependencies
     implementation("com.github.docker-java:docker-java:3.7.0")
@@ -87,10 +87,10 @@ dependencies {
     implementation("io.netty:netty-all:4.2.7.Final")
 
     // Logging
-    implementation("ch.qos.logback:logback-classic:1.5.21")
+    implementation("ch.qos.logback:logback-classic:1.5.22")
 
     // GitIgnore Reader
-    implementation("nl.basjes.gitignore:gitignore-reader:1.12.2")
+    implementation("nl.basjes.gitignore:gitignore-reader:1.14.0")
 
     // TDG : Add other TDG dependencies
     implementation("org.junit.jupiter:junit-jupiter-api:6.0.1")
@@ -102,9 +102,9 @@ dependencies {
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:6.0.1")
     testImplementation("org.junit.jupiter:junit-jupiter-params:6.0.1")
-    testImplementation("org.mockito:mockito-core:5.20.0")
+    testImplementation("org.mockito:mockito-core:5.21.0")
     testImplementation("org.mockito:mockito-inline:5.2.0")
-    testImplementation("org.mockito:mockito-junit-jupiter:5.20.0")
+    testImplementation("org.mockito:mockito-junit-jupiter:5.21.0")
     testImplementation("org.assertj:assertj-core:3.27.6")
     testImplementation("io.github.cdimascio:java-dotenv:5.2.2")
 
