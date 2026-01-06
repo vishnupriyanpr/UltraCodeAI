@@ -69,13 +69,13 @@ dependencies {
     implementation("dev.langchain4j:langchain4j-chroma:$lg4j_version")
 //    implementation("dev.langchain4j:langchain4j-mcp:$lg4j_version")
     implementation("dev.langchain4j:langchain4j-reactor:$lg4j_version")
-    implementation("software.amazon.awssdk:sts:2.38.5")
-    implementation("software.amazon.awssdk:sso:2.38.5")
-    implementation("software.amazon.awssdk:ssooidc:2.38.5")
+    implementation("software.amazon.awssdk:sts:2.41.2")
+    implementation("software.amazon.awssdk:sso:2.41.2")
+    implementation("software.amazon.awssdk:ssooidc:2.41.2")
 
     // Retrofit dependencies
     implementation("com.squareup.retrofit2:converter-gson:3.0.0")
-    implementation("org.xerial:sqlite-jdbc:3.51.0.0")
+    implementation("org.xerial:sqlite-jdbc:3.51.1.0")
 
     // Docker dependencies
     implementation("com.github.docker-java:docker-java:3.7.0")
@@ -84,32 +84,32 @@ dependencies {
     // JTokkit dependencies
     implementation("com.knuddels:jtokkit:1.1.0")
     implementation("org.commonmark:commonmark:0.27.0")
-    implementation("io.netty:netty-all:4.2.7.Final")
+    implementation("io.netty:netty-all:4.2.9.Final")
 
     // Logging
-    implementation("ch.qos.logback:logback-classic:1.5.21")
+    implementation("ch.qos.logback:logback-classic:1.5.23")
 
     // GitIgnore Reader
-    implementation("nl.basjes.gitignore:gitignore-reader:1.12.2")
+    implementation("nl.basjes.gitignore:gitignore-reader:1.14.1")
 
     // TDG : Add other TDG dependencies
-    implementation("org.junit.jupiter:junit-jupiter-api:6.0.1")
-    implementation("org.junit.jupiter:junit-jupiter-engine:6.0.1")
-    implementation("org.junit.platform:junit-platform-launcher:6.0.1")
+    implementation("org.junit.jupiter:junit-jupiter-api:6.0.2")
+    implementation("org.junit.jupiter:junit-jupiter-engine:6.0.2")
+    implementation("org.junit.platform:junit-platform-launcher:6.0.2")
 
     compileOnly("org.projectlombok:lombok:1.18.42")
     annotationProcessor("org.projectlombok:lombok:1.18.42")
 
-    testImplementation("org.junit.jupiter:junit-jupiter-api:6.0.1")
-    testImplementation("org.junit.jupiter:junit-jupiter-params:6.0.1")
-    testImplementation("org.mockito:mockito-core:5.20.0")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:6.0.2")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:6.0.2")
+    testImplementation("org.mockito:mockito-core:5.21.0")
     testImplementation("org.mockito:mockito-inline:5.2.0")
-    testImplementation("org.mockito:mockito-junit-jupiter:5.20.0")
+    testImplementation("org.mockito:mockito-junit-jupiter:5.21.0")
     testImplementation("org.assertj:assertj-core:3.27.6")
     testImplementation("io.github.cdimascio:java-dotenv:5.2.2")
 
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:6.0.1")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:6.0.2")
 }
 
 // Configure Gradle IntelliJ Plugin
